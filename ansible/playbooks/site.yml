@@ -1,0 +1,36 @@
+---
+# Main site playbook - entry point for all automation
+- name: Local setup
+  hosts: local
+  gather_facts: true
+  become: false
+
+  vars:
+    app_name: "my-app"
+    env: "dev"
+
+  pre_tasks:
+    - name: Show target host info
+      ansible.builtin.debug:
+        msg: "Running on {{ inventory_hostname }} ({{ ansible_os_family }})"
+
+  tasks:
+    - name: Ensure workspace directory exists
+      ansible.builtin.file:
+        path: "/tmp/{{ app_name }}"
+        state: directory
+        mode: "0755"
+
+    - name: Create sample config file
+      ansible.builtin.copy:
+        dest: "/tmp/{{ app_name }}/config.yml"
+        content: |
+          app: {{ app_name }}
+          env: {{ env }}
+          managed_by: ansible
+        mode: "0644"
+
+  post_tasks:
+    - name: Playbook complete
+      ansible.builtin.debug:
+        msg: "✅ Playbook finished successfully for env={{ env }}"

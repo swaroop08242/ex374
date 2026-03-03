@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# Ansible
+*.retry
+.cache/
+ansible/.cache/
+
+# Molecule
+.molecule/
+
+# VS Code
+.vscode/
+
+# SSH & secrets
+*.pem
+*.key
+vault_password*
+
+# OS
+.DS_Store
+Thumbs.db

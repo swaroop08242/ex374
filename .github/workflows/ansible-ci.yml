@@ -1,0 +1,135 @@
+name: Ansible CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  PY_COLORS: "1"
+  ANSIBLE_FORCE_COLOR: "1"
+
+jobs:
+  # ── Job 1: Lint & Syntax ──────────────────────────────────────────────────
+  lint:
+    name: Lint & Syntax Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Ansible collections
+        run: ansible-galaxy collection install -r requirements.yml
+
+      - name: Ruff — Python lint
+        run: ruff check .
+
+      - name: Black — Python format check
+        run: black --check .
+
+      - name: Ansible-lint
+        run: ansible-lint ansible/
+
+      - name: Ansible syntax check
+        run: |
+          ansible-playbook ansible/playbooks/site.yml \
+            --syntax-check \
+            -i ansible/inventory/
+
+  # ── Job 2: Unit Tests ─────────────────────────────────────────────────────
+  test:
+    name: Python Tests
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pytest
+        run: pytest tests/ -v --tb=short
+
+  # ── Job 3: Molecule Role Tests ────────────────────────────────────────────
+  molecule:
+    name: Molecule Tests
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Ansible collections
+        run: ansible-galaxy collection install -r requirements.yml
+
+      - name: Run Molecule (if roles exist)
+        run: |
+          if ls ansible/roles/*/molecule 2>/dev/null; then
+            for role in ansible/roles/*/; do
+              if [ -d "${role}molecule" ]; then
+                echo "Testing role: $role"
+                cd "$role" && molecule test && cd -
+              fi
+            done
+          else
+            echo "No molecule tests found — skipping."
+          fi
+
+  # ── Job 4: Deploy (main branch only) ─────────────────────────────────────
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: [test, molecule]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Ansible collections
+        run: ansible-galaxy collection install -r requirements.yml
+
+      - name: Run deployment playbook
+        run: |
+          ansible-playbook ansible/playbooks/site.yml \
+            -i ansible/inventory/ \
+            --extra-vars "env=prod"

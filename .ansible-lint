@@ -1,0 +1,14 @@
+---
+profile: moderate
+
+exclude_paths:
+  - .git/
+  - .cache/
+
+warn_list:
+  - yaml[line-length]
+
+skip_list:
+  - no-changed-when  # relax for local dev tasks
+
+use_default_rules: true

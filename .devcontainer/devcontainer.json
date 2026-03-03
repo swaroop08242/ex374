@@ -1,0 +1,53 @@
+{
+  "name": "Ansible Dev Environment",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "workspaceFolder": "/workspace",
+
+  "runArgs": [
+    "--userns=keep-id",
+    "--security-opt=label=disable"
+  ],
+
+  "containerUser": "devuser",
+  "remoteUser": "devuser",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "redhat.ansible",
+        "ms-python.python",
+        "ms-python.pylance",
+        "charliermarsh.ruff",
+        "ms-python.black-formatter",
+        "timonwong.shellcheck",
+        "github.vscode-github-actions",
+        "yzhang.markdown-all-in-one"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python3",
+        "ansible.python.interpreterPath": "/usr/local/bin/python3",
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter",
+          "editor.formatOnSave": true
+        },
+        "[ansible]": {
+          "editor.detectIndentation": true,
+          "editor.tabSize": 2
+        },
+        "editor.rulers": [88, 120],
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true
+      }
+    }
+  },
+
+  "postCreateCommand": "pre-commit install && echo '✅ Dev container ready!'",
+
+  "mounts": [
+    "source=${localEnv:HOME}/.ssh,target=/home/devuser/.ssh,type=bind,readonly"
+  ]
+}
