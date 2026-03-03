@@ -12,19 +12,24 @@ repos:
         args: [--maxkb=1000]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.0
+    rev: v0.5.0
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
 
   - repo: https://github.com/psf/black
-    rev: 24.2.0
+    rev: 24.3.0
     hooks:
       - id: black
 
-  - repo: https://github.com/ansible/ansible-lint
-    rev: v24.2.0
+  # Use system ansible-lint instead of pre-commit's isolated env
+  # This ensures ansible-lint has access to the ansible package installed in the container
+  - repo: local
     hooks:
       - id: ansible-lint
+        name: Ansible-lint
+        language: system
+        entry: ansible-lint
         files: \.(yaml|yml)$
+        pass_filenames: false
