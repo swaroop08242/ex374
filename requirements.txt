@@ -2,6 +2,8 @@
 ansible==10.3.0
 ansible-core==2.17.3
 ansible-lint==24.7.0
+ansible-navigator
+ansible-builder
 
 # Molecule for testing roles
 molecule==24.7.0
