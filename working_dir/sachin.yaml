@@ -1,0 +1,5 @@
+---
+- name: sachin file
+  copy:
+    src: samba.yml
+    dest: samba.txt
